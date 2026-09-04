@@ -17,6 +17,8 @@ import net.runelite.client.callback.ClientThread;
 final class CameraScenesCameraService
 {
 	private static final int FREE_CAMERA_MODE = 1;
+	private static final int CAMERA_SETTLE_TOLERANCE = 2;
+	private static final long ATTACHED_HANDOFF_GRACE_NANOS = 100_000_000L;
 	private final Client client;
 	private final ClientThread clientThread;
 	private final CameraScenesConfig config;
@@ -150,8 +152,12 @@ final class CameraScenesCameraService
 			{
 				client.runScript(ScriptID.CAMERA_DO_ZOOM, transition.getTargetZoom(), transition.getTargetZoom());
 			}
-			returnToAttachedCameraNow();
-			pendingTransition = null;
+			if (hasCameraSettled(client.getCameraYaw(), client.getCameraPitch(), transition.getTargetYaw(), transition.getTargetPitch())
+				|| transition.hasExceededSettleGrace(nowNanos))
+			{
+				returnToAttachedCameraNow();
+				pendingTransition = null;
+			}
 		}
 	}
 
@@ -260,6 +266,14 @@ final class CameraScenesCameraService
 		}
 	}
 
+	static boolean hasCameraSettled(int currentYaw, int currentPitch, int targetYaw, int targetPitch)
+	{
+		int yawDelta = Math.abs(Math.floorMod(currentYaw - targetYaw + CameraScenesViewpoint.YAW_UNITS / 2,
+			CameraScenesViewpoint.YAW_UNITS) - CameraScenesViewpoint.YAW_UNITS / 2);
+		return yawDelta <= CAMERA_SETTLE_TOLERANCE
+			&& Math.abs(currentPitch - targetPitch) <= CAMERA_SETTLE_TOLERANCE;
+	}
+
 	private int currentZoom()
 	{
 		return client.getVarcIntValue(VarClientID.CAMERA_ZOOM_BIG);
@@ -278,6 +292,7 @@ final class CameraScenesCameraService
 		private final boolean smoothZoom;
 		private long heldAtNanos = -1L;
 		private long heldDurationNanos;
+		private long settleStartedAtNanos = -1L;
 
 		private PendingCameraTransition(int startYaw, int startPitch, int startZoom, int targetYaw, int targetPitch,
 			int targetZoom, long createdAtNanos, int durationMilliseconds, boolean smoothZoom)
@@ -301,6 +316,15 @@ final class CameraScenesCameraService
 		private int getTargetZoom() { return targetZoom; }
 		private int getDurationMilliseconds() { return durationMilliseconds; }
 		private boolean isSmoothZoom() { return smoothZoom; }
+
+		private boolean hasExceededSettleGrace(long nowNanos)
+		{
+			if (settleStartedAtNanos < 0L)
+			{
+				settleStartedAtNanos = nowNanos;
+			}
+			return nowNanos - settleStartedAtNanos >= ATTACHED_HANDOFF_GRACE_NANOS;
+		}
 
 		private void hold(long nowNanos)
 		{

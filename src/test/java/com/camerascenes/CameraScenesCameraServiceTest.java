@@ -19,4 +19,18 @@ public class CameraScenesCameraServiceTest
 	{
 		assertFalse(CameraScenesCameraService.hasReadyCameraState(0, 0));
 	}
+
+	@Test
+	public void cameraSettledAllowsSmallClientRoundingDifference()
+	{
+		assertTrue(CameraScenesCameraService.hasCameraSettled(1023, 256, 1024, 256));
+		assertTrue(CameraScenesCameraService.hasCameraSettled(1024, 257, 1024, 256));
+		assertFalse(CameraScenesCameraService.hasCameraSettled(1020, 256, 1024, 256));
+	}
+
+	@Test
+	public void cameraSettledHandlesYawWraparound()
+	{
+		assertTrue(CameraScenesCameraService.hasCameraSettled(2047, 256, 0, 256));
+	}
 }

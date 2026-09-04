@@ -124,7 +124,7 @@ final class CameraScenesViewpointPanel extends JPanel
 		JComboBox<CameraScenesViewpoint.CardinalDirection> directionSelector =
 			new JComboBox<>(CameraScenesViewpoint.CardinalDirection.values());
 		directionSelector.setSelectedItem(viewpoint.getDirection());
-		directionSelector.setToolTipText("Yaw is saved as the nearest compass direction");
+		directionSelector.setToolTipText("North, East, South, West; yaw is saved as the nearest compass direction");
 		JSpinner pitchSpinner = spinner(viewpoint.getPitch(), CameraScenesViewpoint.MIN_PITCH, CameraScenesViewpoint.MAX_PITCH);
 		JSpinner zoomSpinner = spinner(viewpoint.getZoom(), CameraScenesViewpoint.MIN_ZOOM, CameraScenesViewpoint.MAX_ZOOM);
 		cameraValues.add(value("Direction", directionSelector));

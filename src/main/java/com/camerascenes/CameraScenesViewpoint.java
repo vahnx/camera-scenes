@@ -11,18 +11,20 @@ public class CameraScenesViewpoint
 
 	public enum CardinalDirection
 	{
-		SOUTH(0, "South"),
-		WEST(YAW_UNITS / 4, "West"),
-		NORTH(YAW_UNITS / 2, "North"),
-		EAST((YAW_UNITS * 3) / 4, "East");
+		NORTH(YAW_UNITS / 2, "N", "North"),
+		EAST((YAW_UNITS * 3) / 4, "E", "East"),
+		SOUTH(0, "S", "South"),
+		WEST(YAW_UNITS / 4, "W", "West");
 
 		private final int yaw;
-		private final String displayName;
+		private final String abbreviation;
+		private final String fullName;
 
-		CardinalDirection(int yaw, String displayName)
+		CardinalDirection(int yaw, String abbreviation, String fullName)
 		{
 			this.yaw = yaw;
-			this.displayName = displayName;
+			this.abbreviation = abbreviation;
+			this.fullName = fullName;
 		}
 
 		public int getYaw()
@@ -33,7 +35,12 @@ public class CameraScenesViewpoint
 		@Override
 		public String toString()
 		{
-			return displayName;
+			return abbreviation;
+		}
+
+		public String getFullName()
+		{
+			return fullName;
 		}
 
 		static CardinalDirection fromYaw(int yaw)
