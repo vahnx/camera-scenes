@@ -23,5 +23,8 @@ public class CameraScenesCameraInterpolationTest
 		assertEquals(-272, CameraScenesCameraInterpolation.linear(512, -272, 1.0));
 		assertEquals(1400, CameraScenesCameraInterpolation.linear(-272, 1400, 1.0));
 		assertEquals(0.5, CameraScenesCameraInterpolation.easeInOut(0.5), 0.000001);
+		assertEquals(0.5, CameraScenesCameraInterpolation.zoomEaseInOut(0.5), 0.000001);
+		assertTrue(CameraScenesCameraInterpolation.zoomEaseInOut(0.9)
+			> CameraScenesCameraInterpolation.easeInOut(0.9));
 	}
 }

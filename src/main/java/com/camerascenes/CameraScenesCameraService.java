@@ -140,7 +140,8 @@ final class CameraScenesCameraService
 		client.setCameraPitchTarget(pitch);
 		if (transition.isSmoothZoom())
 		{
-			int zoom = CameraScenesCameraInterpolation.linear(transition.getStartZoom(), transition.getTargetZoom(), progress);
+			int zoom = CameraScenesCameraInterpolation.linear(transition.getStartZoom(), transition.getTargetZoom(),
+				CameraScenesCameraInterpolation.zoomEaseInOut(rawProgress));
 			if (transition.shouldSendZoom(zoom))
 			{
 				client.runScript(ScriptID.CAMERA_DO_ZOOM, zoom, zoom);

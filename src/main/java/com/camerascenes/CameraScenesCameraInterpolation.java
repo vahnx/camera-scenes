@@ -24,4 +24,13 @@ final class CameraScenesCameraInterpolation
 	{
 		return progress * progress * (3.0 - (2.0 * progress));
 	}
+
+	/**
+	 * A higher-order curve for zoom, whose acceleration also eases toward zero at
+	 * both endpoints so large zoom changes do not finish with a visible step.
+	 */
+	static double zoomEaseInOut(double progress)
+	{
+		return progress * progress * progress * (progress * (progress * 6.0 - 15.0) + 10.0);
+	}
 }
