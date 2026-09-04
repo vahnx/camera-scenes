@@ -13,6 +13,7 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -120,14 +121,27 @@ final class CameraScenesViewpointPanel extends JPanel
 		JPanel cameraValues = new JPanel(new GridLayout(1, 3, 4, 0));
 		cameraValues.setOpaque(false);
 		cameraValues.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 4));
-		JSpinner yawSpinner = spinner(viewpoint.getYaw(), 0, CameraScenesViewpoint.YAW_UNITS - 1);
+		JComboBox<CameraScenesViewpoint.CardinalDirection> directionSelector =
+			new JComboBox<>(CameraScenesViewpoint.CardinalDirection.values());
+		directionSelector.setSelectedItem(viewpoint.getDirection());
+		directionSelector.setToolTipText("Yaw is saved as the nearest compass direction");
 		JSpinner pitchSpinner = spinner(viewpoint.getPitch(), CameraScenesViewpoint.MIN_PITCH, CameraScenesViewpoint.MAX_PITCH);
 		JSpinner zoomSpinner = spinner(viewpoint.getZoom(), CameraScenesViewpoint.MIN_ZOOM, CameraScenesViewpoint.MAX_ZOOM);
-		cameraValues.add(value("Yaw", yawSpinner));
+		cameraValues.add(value("Direction", directionSelector));
 		cameraValues.add(value("Pitch", pitchSpinner));
 		cameraValues.add(value("Zoom", zoomSpinner));
 		add(cameraValues, BorderLayout.CENTER);
-		bindSpinner(yawSpinner, viewpoint::setYaw);
+		directionSelector.addActionListener(actionEvent -> {
+			CameraScenesViewpoint.CardinalDirection direction =
+				(CameraScenesViewpoint.CardinalDirection) directionSelector.getSelectedItem();
+			if (direction != null && viewpoint.getYaw() != direction.getYaw())
+			{
+				plugin.getViewpointHistory().recordBeforeMutation(viewpoint);
+				viewpoint.setYaw(direction.getYaw());
+				plugin.saveConfig();
+				refreshHistoryButtons();
+			}
+		});
 		bindSpinner(pitchSpinner, viewpoint::setPitch);
 		bindSpinner(zoomSpinner, viewpoint::setZoom);
 
@@ -296,7 +310,7 @@ final class CameraScenesViewpointPanel extends JPanel
 		return "Notes";
 	}
 
-	private JPanel value(String label, JSpinner spinner)
+	private JPanel value(String label, Component input)
 	{
 		JPanel panel = new JPanel(new BorderLayout(0, 2));
 		panel.setOpaque(false);
@@ -304,7 +318,7 @@ final class CameraScenesViewpointPanel extends JPanel
 		text.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
 		text.setHorizontalAlignment(JLabel.CENTER);
 		panel.add(text, BorderLayout.NORTH);
-		panel.add(spinner, BorderLayout.CENTER);
+		panel.add(input, BorderLayout.CENTER);
 		return panel;
 	}
 

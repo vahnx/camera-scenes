@@ -5,7 +5,55 @@ import net.runelite.client.config.Keybind;
 
 public class CameraScenesViewpoint
 {
-	public static final int YAW_UNITS = 16384;
+	/** RuneLite camera yaw is measured in 2048 Jagex Angle Units per revolution. */
+	public static final int YAW_UNITS = 2048;
+	private static final int COMPASS_QUADRANT_WIDTH = YAW_UNITS / 8;
+
+	public enum CardinalDirection
+	{
+		SOUTH(0, "South"),
+		WEST(YAW_UNITS / 4, "West"),
+		NORTH(YAW_UNITS / 2, "North"),
+		EAST((YAW_UNITS * 3) / 4, "East");
+
+		private final int yaw;
+		private final String displayName;
+
+		CardinalDirection(int yaw, String displayName)
+		{
+			this.yaw = yaw;
+			this.displayName = displayName;
+		}
+
+		public int getYaw()
+		{
+			return yaw;
+		}
+
+		@Override
+		public String toString()
+		{
+			return displayName;
+		}
+
+		static CardinalDirection fromYaw(int yaw)
+		{
+			int normalized = normalizeYaw(yaw);
+			if (normalized < COMPASS_QUADRANT_WIDTH || normalized >= YAW_UNITS - COMPASS_QUADRANT_WIDTH)
+			{
+				return SOUTH;
+			}
+			if (normalized < YAW_UNITS / 2 - COMPASS_QUADRANT_WIDTH)
+			{
+				return WEST;
+			}
+			if (normalized < YAW_UNITS / 2 + COMPASS_QUADRANT_WIDTH)
+			{
+				return NORTH;
+			}
+			return EAST;
+		}
+	}
 	public static final int MIN_PITCH = 0;
 	public static final int MAX_PITCH = 4160;
 	public static final int DEFAULT_MIN_PITCH = 128;
@@ -31,16 +79,16 @@ public class CameraScenesViewpoint
 	{
 		this.id = id;
 		this.name = name;
-		this.yaw = yaw;
-		this.pitch = pitch;
-		this.zoom = zoom;
+		setYaw(yaw);
+		setPitch(pitch);
+		setZoom(zoom);
 		this.keybind = keybind;
 		this.enabled = enabled;
 	}
 
 	public void capture(int yaw, int pitch, int zoom)
 	{
-		this.yaw = normalizeYaw(yaw);
+		this.yaw = snapToCompassYaw(yaw);
 		this.pitch = clamp(pitch, MIN_PITCH, MAX_PITCH);
 		this.zoom = clamp(zoom, MIN_ZOOM, MAX_ZOOM);
 	}
@@ -52,7 +100,8 @@ public class CameraScenesViewpoint
 	public String getNotes() { return notes == null ? "" : notes; }
 	public void setNotes(String notes) { this.notes = notes == null ? "" : notes; }
 	public int getYaw() { return yaw; }
-	public void setYaw(int yaw) { this.yaw = normalizeYaw(yaw); }
+	public void setYaw(int yaw) { this.yaw = snapToCompassYaw(yaw); }
+	public CardinalDirection getDirection() { return CardinalDirection.fromYaw(yaw); }
 	public int getPitch() { return pitch; }
 	public void setPitch(int pitch) { this.pitch = clamp(pitch, MIN_PITCH, MAX_PITCH); }
 	public int getZoom() { return zoom; }
@@ -77,6 +126,11 @@ public class CameraScenesViewpoint
 	public static int normalizeYaw(int yaw)
 	{
 		return Math.floorMod(yaw, YAW_UNITS);
+	}
+
+	public static int snapToCompassYaw(int yaw)
+	{
+		return CardinalDirection.fromYaw(yaw).getYaw();
 	}
 
 	static boolean usesExtendedPitch(int pitch)

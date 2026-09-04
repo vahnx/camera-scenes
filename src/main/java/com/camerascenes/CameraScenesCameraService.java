@@ -16,6 +16,7 @@ import net.runelite.client.callback.ClientThread;
 @Singleton
 final class CameraScenesCameraService
 {
+	private static final int FREE_CAMERA_MODE = 1;
 	private final Client client;
 	private final ClientThread clientThread;
 	private final CameraScenesConfig config;
@@ -121,6 +122,11 @@ final class CameraScenesCameraService
 			return;
 		}
 		transition.resume(nowNanos);
+		if (!ensureFreeCameraMode())
+		{
+			pendingTransition = null;
+			return;
+		}
 
 		double rawProgress = Math.min(1.0,
 			transition.getElapsedNanos(nowNanos) / (transition.getDurationMilliseconds() * 1_000_000.0));
@@ -157,7 +163,7 @@ final class CameraScenesCameraService
 	{
 		CameraScenesViewpoint viewpoint = queuedViewpoint;
 		queuedViewpoint = null;
-		if (viewpoint == null || !isCameraReady() || isCutsceneActive())
+		if (viewpoint == null || !isCameraReady() || isCutsceneActive() || !ensureFreeCameraMode())
 		{
 			return;
 		}
@@ -214,9 +220,22 @@ final class CameraScenesCameraService
 
 	private void applyImmediate(CameraScenesViewpoint savedViewpoint)
 	{
+		if (!ensureFreeCameraMode())
+		{
+			return;
+		}
 		client.setCameraYawTarget(savedViewpoint.getYaw());
 		client.setCameraPitchTarget(savedViewpoint.getPitch());
 		client.runScript(ScriptID.CAMERA_DO_ZOOM, savedViewpoint.getZoom(), savedViewpoint.getZoom());
+	}
+
+	private boolean ensureFreeCameraMode()
+	{
+		if (client.getCameraMode() != FREE_CAMERA_MODE)
+		{
+			client.setCameraMode(FREE_CAMERA_MODE);
+		}
+		return client.getCameraMode() == FREE_CAMERA_MODE;
 	}
 
 	private int currentZoom()
