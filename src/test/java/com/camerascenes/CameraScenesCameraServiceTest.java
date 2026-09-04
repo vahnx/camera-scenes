@@ -31,6 +31,6 @@ public class CameraScenesCameraServiceTest
 	@Test
 	public void cameraSettledHandlesYawWraparound()
 	{
-		assertTrue(CameraScenesCameraService.hasCameraSettled(2047, 256, 0, 256));
+		assertTrue(CameraScenesCameraService.hasCameraSettled(16383, 256, 0, 256));
 	}
 }

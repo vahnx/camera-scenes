@@ -23,12 +23,20 @@ public class CameraScenesViewpointTest
 	public void yawSnapsToTheNearestCardinalDirection()
 	{
 		CameraScenesViewpoint viewpoint = new CameraScenesViewpoint();
-		viewpoint.setYaw(300);
+		viewpoint.setYaw(3000);
 		assertEquals(CameraScenesViewpoint.CardinalDirection.WEST, viewpoint.getDirection());
-		assertEquals(512, viewpoint.getYaw());
+		assertEquals(4096, viewpoint.getYaw());
 
 		viewpoint.setYaw(1792);
 		assertEquals(CameraScenesViewpoint.CardinalDirection.SOUTH, viewpoint.getDirection());
+	}
+
+	@Test
+	public void migratesInterimCompassValues()
+	{
+		assertEquals(4096, CameraScenesViewpoint.migrateInterimCompassYaw(512));
+		assertEquals(8192, CameraScenesViewpoint.migrateInterimCompassYaw(1024));
+		assertEquals(12288, CameraScenesViewpoint.migrateInterimCompassYaw(1536));
 	}
 
 	@Test

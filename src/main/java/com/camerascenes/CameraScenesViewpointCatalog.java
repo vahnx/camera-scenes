@@ -71,7 +71,7 @@ public class CameraScenesViewpointCatalog
 				{
 					savedViewpoint.setId(entryIndex);
 					savedViewpoint.setKeybind(savedViewpoint.getKeybind());
-					savedViewpoint.setYaw(savedViewpoint.getYaw());
+					savedViewpoint.setYaw(CameraScenesViewpoint.migrateInterimCompassYaw(savedViewpoint.getYaw()));
 					savedViewpoint.setPitch(savedViewpoint.getPitch());
 					savedViewpoint.setZoom(savedViewpoint.getZoom());
 					savedViewpoint.setNotes(savedViewpoint.getNotes());

@@ -5,8 +5,8 @@ import net.runelite.client.config.Keybind;
 
 public class CameraScenesViewpoint
 {
-	/** RuneLite camera yaw is measured in 2048 Jagex Angle Units per revolution. */
-	public static final int YAW_UNITS = 2048;
+	/** RuneLite camera yaw uses 14-bit Jagex Angle Units per revolution. */
+	public static final int YAW_UNITS = 1 << 14;
 	private static final int COMPASS_QUADRANT_WIDTH = YAW_UNITS / 8;
 
 	public enum CardinalDirection
@@ -138,6 +138,21 @@ public class CameraScenesViewpoint
 	public static int snapToCompassYaw(int yaw)
 	{
 		return CardinalDirection.fromYaw(yaw).getYaw();
+	}
+
+	static int migrateInterimCompassYaw(int yaw)
+	{
+		switch (yaw)
+		{
+			case 512:
+				return CardinalDirection.WEST.getYaw();
+			case 1024:
+				return CardinalDirection.NORTH.getYaw();
+			case 1536:
+				return CardinalDirection.EAST.getYaw();
+			default:
+				return yaw;
+		}
 	}
 
 	static boolean usesExtendedPitch(int pitch)

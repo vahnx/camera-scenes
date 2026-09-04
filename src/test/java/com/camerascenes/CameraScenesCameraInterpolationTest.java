@@ -9,9 +9,9 @@ public class CameraScenesCameraInterpolationTest
 	@Test
 	public void yawUsesTheShortestWraparoundPath()
 	{
-		assertEquals(0, CameraScenesCameraInterpolation.yaw(2044, 4, 0.5));
-		assertEquals(0, CameraScenesCameraInterpolation.yaw(4, 2044, 0.5));
-		assertEquals(2047, CameraScenesCameraInterpolation.yaw(2047, 2047, 1.0));
+		assertEquals(0, CameraScenesCameraInterpolation.yaw(16380, 4, 0.5));
+		assertEquals(0, CameraScenesCameraInterpolation.yaw(4, 16380, 0.5));
+		assertEquals(16383, CameraScenesCameraInterpolation.yaw(16383, 16383, 1.0));
 		assertEquals(0, CameraScenesCameraInterpolation.yaw(0, 0, 1.0));
 	}
 

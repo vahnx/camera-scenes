@@ -24,7 +24,7 @@ public class CameraScenesViewpointHistoryTest
 		history.recordBeforeMutation(viewpoint);
 		viewpoint.setName("Changed");
 		viewpoint.setNotes("Changed notes");
-		viewpoint.setYaw(300);
+		viewpoint.setYaw(3000);
 		viewpoint.setPitch(400);
 		viewpoint.setZoom(600);
 		viewpoint.setKeybind(changedKeybind);
