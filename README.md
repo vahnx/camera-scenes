@@ -8,7 +8,7 @@ Save and load camera viewpoints so you can quickly return to useful angles.
 - Organize viewpoints into groups
 - Ability to name, enable, import, export and reorder groups/viewpoints
 - Load or cycle through viewpoints with the sidepanel or programmable hotkeys
-- Yaw is stored as one of the four compass directions; viewpoint loads use RuneLite's free camera mode for saved pitch values
+- Yaw is stored as one of the four compass directions; viewpoint loads briefly use RuneLite's free camera mode while applying saved pitch values
 
 ## Screenshots
 
@@ -16,7 +16,7 @@ Save and load camera viewpoints so you can quickly return to useful angles.
 
 ## Known Issues
 - Some plugins that continuously control the camera can override this plugs settings causing instability.
-- Loading a viewpoint switches the camera to free camera mode. Use the sidepanel's `...` menu and choose **Return to attached camera** when finished.
+- Loading a viewpoint briefly switches to free camera mode during panning, then returns to attached camera mode automatically. The sidepanel's `...` menu still provides a manual reset if needed.
 - Enable **Expand pitch limit** in the **Camera** plugin before using extended values.
 
 ![Camera Scenes expand pitch setting](images/camera-scenes-settings.png)

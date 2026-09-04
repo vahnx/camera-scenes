@@ -112,6 +112,7 @@ final class CameraScenesCameraService
 		if (isCameraInputActive())
 		{
 			pendingTransition = null;
+			returnToAttachedCameraNow();
 			return;
 		}
 
@@ -149,6 +150,7 @@ final class CameraScenesCameraService
 			{
 				client.runScript(ScriptID.CAMERA_DO_ZOOM, transition.getTargetZoom(), transition.getTargetZoom());
 			}
+			returnToAttachedCameraNow();
 			pendingTransition = null;
 		}
 	}
@@ -238,6 +240,7 @@ final class CameraScenesCameraService
 		client.setCameraYawTarget(savedViewpoint.getYaw());
 		client.setCameraPitchTarget(savedViewpoint.getPitch());
 		client.runScript(ScriptID.CAMERA_DO_ZOOM, savedViewpoint.getZoom(), savedViewpoint.getZoom());
+		returnToAttachedCameraNow();
 	}
 
 	private boolean ensureFreeCameraMode()
@@ -247,6 +250,14 @@ final class CameraScenesCameraService
 			client.setCameraMode(FREE_CAMERA_MODE);
 		}
 		return client.getCameraMode() == FREE_CAMERA_MODE;
+	}
+
+	private void returnToAttachedCameraNow()
+	{
+		if (client.getGameState() == GameState.LOGGED_IN && client.getCameraMode() == FREE_CAMERA_MODE)
+		{
+			client.setCameraMode(0);
+		}
 	}
 
 	private int currentZoom()
