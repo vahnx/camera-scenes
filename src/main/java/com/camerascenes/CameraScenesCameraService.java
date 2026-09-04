@@ -141,14 +141,17 @@ final class CameraScenesCameraService
 		if (transition.isSmoothZoom())
 		{
 			int zoom = CameraScenesCameraInterpolation.linear(transition.getStartZoom(), transition.getTargetZoom(), progress);
-			client.runScript(ScriptID.CAMERA_DO_ZOOM, zoom, zoom);
+			if (transition.shouldSendZoom(zoom))
+			{
+				client.runScript(ScriptID.CAMERA_DO_ZOOM, zoom, zoom);
+			}
 		}
 
 		if (rawProgress >= 1.0)
 		{
 			client.setCameraYawTarget(transition.getTargetYaw());
 			client.setCameraPitchTarget(transition.getTargetPitch());
-			if (transition.isSmoothZoom())
+			if (transition.isSmoothZoom() && transition.shouldSendZoom(transition.getTargetZoom()))
 			{
 				client.runScript(ScriptID.CAMERA_DO_ZOOM, transition.getTargetZoom(), transition.getTargetZoom());
 			}
@@ -293,6 +296,7 @@ final class CameraScenesCameraService
 		private long heldAtNanos = -1L;
 		private long heldDurationNanos;
 		private long settleStartedAtNanos = -1L;
+		private int lastZoomCommand = Integer.MIN_VALUE;
 
 		private PendingCameraTransition(int startYaw, int startPitch, int startZoom, int targetYaw, int targetPitch,
 			int targetZoom, long createdAtNanos, int durationMilliseconds, boolean smoothZoom)
@@ -316,6 +320,16 @@ final class CameraScenesCameraService
 		private int getTargetZoom() { return targetZoom; }
 		private int getDurationMilliseconds() { return durationMilliseconds; }
 		private boolean isSmoothZoom() { return smoothZoom; }
+
+		private boolean shouldSendZoom(int zoom)
+		{
+			if (zoom == lastZoomCommand)
+			{
+				return false;
+			}
+			lastZoomCommand = zoom;
+			return true;
+		}
 
 		private boolean hasExceededSettleGrace(long nowNanos)
 		{
