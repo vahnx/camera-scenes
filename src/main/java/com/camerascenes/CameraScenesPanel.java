@@ -434,6 +434,10 @@ final class CameraScenesPanel extends PluginPanel
 		JMenuItem importItem = new JMenuItem("Import Full Backup");
 		importItem.addActionListener(actionEvent -> importFullBackup());
 		menu.add(importItem);
+		menu.addSeparator();
+		JMenuItem attachedCameraItem = new JMenuItem("Return to attached camera");
+		attachedCameraItem.addActionListener(actionEvent -> plugin.returnToAttachedCamera());
+		menu.add(attachedCameraItem);
 		menu.show(this, Math.max(0, getWidth() - 44), 24);
 	}
 

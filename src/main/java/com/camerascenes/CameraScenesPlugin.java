@@ -139,6 +139,11 @@ public class CameraScenesPlugin extends Plugin
 		cameraService.apply(viewpoint);
 	}
 
+	void returnToAttachedCamera()
+	{
+		cameraService.returnToAttachedCamera();
+	}
+
 	boolean hasCameraSmoothingConflict()
 	{
 		for (Plugin plugin : pluginManager.getPlugins())

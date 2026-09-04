@@ -159,6 +159,17 @@ final class CameraScenesCameraService
 		queuedViewpoint = null;
 	}
 
+	void returnToAttachedCamera()
+	{
+		clientThread.invokeLater(() -> {
+			cancelPendingLoad();
+			if (client.getGameState() == GameState.LOGGED_IN && client.getCameraMode() == FREE_CAMERA_MODE)
+			{
+				client.setCameraMode(0);
+			}
+		});
+	}
+
 	private void startQueuedTransition()
 	{
 		CameraScenesViewpoint viewpoint = queuedViewpoint;

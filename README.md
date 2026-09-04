@@ -16,7 +16,7 @@ Save and load camera viewpoints so you can quickly return to useful angles.
 
 ## Known Issues
 - Some plugins that continuously control the camera can override this plugs settings causing instability.
-- Loading a viewpoint switches the camera to free camera mode. Use the normal RuneLite camera controls to return to attached camera behavior.
+- Loading a viewpoint switches the camera to free camera mode. Use the sidepanel's `...` menu and choose **Return to attached camera** when finished.
 - Enable **Expand pitch limit** in the **Camera** plugin before using extended values.
 
 ![Camera Scenes expand pitch setting](images/camera-scenes-settings.png)
