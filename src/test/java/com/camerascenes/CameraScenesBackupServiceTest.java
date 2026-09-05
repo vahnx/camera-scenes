@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Arrays;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
@@ -37,7 +38,7 @@ public class CameraScenesBackupServiceTest
 		assertEquals(CameraScenesBackup.SCOPE_ALL, decoded.getScope());
 		assertEquals(group, decoded.getGroups().get(0));
 		assertTrue(new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8).contains("\"previousKeybind\""));
-		assertTrue(decoded.getSettings().isSmoothViewpointLoads());
+		assertFalse(decoded.getSettings().isSmoothViewpointLoads());
 	}
 
 	@Test(expected = java.io.IOException.class)

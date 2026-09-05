@@ -127,25 +127,30 @@ final class CameraScenesPanel extends PluginPanel
 		JPanel status = new JPanel();
 		status.setOpaque(false);
 		status.setLayout(new BoxLayout(status, BoxLayout.Y_AXIS));
-		cameraConflictWarningLabel.setForeground(ColorScheme.BRAND_ORANGE);
-		cameraConflictWarningLabel.setFont(FontManager.getRunescapeSmallFont());
-		cameraConflictWarningLabel.setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
-		cameraConflictWarningLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-		cameraConflictWarningLabel.setVisible(false);
-		status.add(cameraConflictWarningLabel);
-		cameraConflictImageLabel.setIcon(loadPanelImage("/camera_smoothing_settings.png"));
-		cameraConflictImageLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-		cameraConflictImageLabel.setHorizontalAlignment(JLabel.CENTER);
-		cameraConflictImageFrame.setOpaque(true);
-		cameraConflictImageFrame.setBackground(Color.WHITE);
-		cameraConflictImageFrame.setBorder(BorderFactory.createCompoundBorder(
-			BorderFactory.createLineBorder(Color.WHITE, 2),
-			BorderFactory.createEmptyBorder(2, 2, 2, 2)));
-		cameraConflictImageFrame.setAlignmentX(Component.LEFT_ALIGNMENT);
-		cameraConflictImageFrame.setMaximumSize(new Dimension(180, 200));
-		cameraConflictImageFrame.add(cameraConflictImageLabel, BorderLayout.CENTER);
-		cameraConflictImageFrame.setVisible(false);
-		status.add(cameraConflictImageFrame);
+		/*
+		 * Camera Smoothing warning retained for development, but hidden because
+		 * Camera Scenes no longer performs smooth viewpoint loads.
+		 *
+		 * cameraConflictWarningLabel.setForeground(ColorScheme.BRAND_ORANGE);
+		 * cameraConflictWarningLabel.setFont(FontManager.getRunescapeSmallFont());
+		 * cameraConflictWarningLabel.setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
+		 * cameraConflictWarningLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+		 * cameraConflictWarningLabel.setVisible(false);
+		 * status.add(cameraConflictWarningLabel);
+		 * cameraConflictImageLabel.setIcon(loadPanelImage("/camera_smoothing_settings.png"));
+		 * cameraConflictImageLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+		 * cameraConflictImageLabel.setHorizontalAlignment(JLabel.CENTER);
+		 * cameraConflictImageFrame.setOpaque(true);
+		 * cameraConflictImageFrame.setBackground(Color.WHITE);
+		 * cameraConflictImageFrame.setBorder(BorderFactory.createCompoundBorder(
+		 * 	BorderFactory.createLineBorder(Color.WHITE, 2),
+		 * 	BorderFactory.createEmptyBorder(2, 2, 2, 2)));
+		 * cameraConflictImageFrame.setAlignmentX(Component.LEFT_ALIGNMENT);
+		 * cameraConflictImageFrame.setMaximumSize(new Dimension(180, 200));
+		 * cameraConflictImageFrame.add(cameraConflictImageLabel, BorderLayout.CENTER);
+		 * cameraConflictImageFrame.setVisible(false);
+		 * status.add(cameraConflictImageFrame);
+		 */
 		cameraPitchWarningLabel.setForeground(ColorScheme.BRAND_ORANGE);
 		cameraPitchWarningLabel.setFont(FontManager.getRunescapeSmallFont());
 		cameraPitchWarningLabel.setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
@@ -169,7 +174,9 @@ final class CameraScenesPanel extends PluginPanel
 		cameraDebugLabel.setFont(FontManager.getRunescapeSmallFont());
 		cameraDebugLabel.setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
 		cameraDebugLabel.setVisible(false);
-		status.add(cameraDebugLabel);
+		// Debug display retained for development, but intentionally hidden from
+		// the sidepanel until it is explicitly re-enabled in a future debug build.
+		// status.add(cameraDebugLabel);
 		header.add(status, BorderLayout.SOUTH);
 		content.add(header, BorderLayout.NORTH);
 
@@ -190,7 +197,7 @@ final class CameraScenesPanel extends PluginPanel
 		reload();
 		cameraDebugTimer = new Timer(100, actionEvent -> requestCameraDebugUpdate());
 		cameraDebugTimer.setCoalesce(true);
-		refreshDebugTextVisibility();
+		// refreshDebugTextVisibility();
 	}
 
 	void shutDown()
@@ -214,8 +221,8 @@ final class CameraScenesPanel extends PluginPanel
 			}
 			else
 			{
-				cameraDebugLabel.setText(String.format("<html><div style='width:215px'>Yaw %d | Pitch %d | Zoom %d</div></html>",
-					state.getCurrentYaw(), state.getCurrentPitch(), state.getZoom()));
+				cameraDebugLabel.setText(String.format("<html><div style='width:180px'>Yaw %d | Pitch %d | Zoom %d<br>%s</div></html>",
+					state.getCurrentYaw(), state.getCurrentPitch(), state.getZoom(), state.getDiagnostics()));
 			}
 			};
 			if (javax.swing.SwingUtilities.isEventDispatchThread())
@@ -336,17 +343,18 @@ final class CameraScenesPanel extends PluginPanel
 			return;
 		}
 
-		boolean smoothingConflict = plugin.hasCameraSmoothingConflict();
+		/*
+		 * Camera Smoothing warning retained for development, but disabled because
+		 * viewpoint loads are now immediate.
+		 * boolean smoothingConflict = plugin.hasCameraSmoothingConflict();
+		 * cameraConflictWarningLabel.setText(...);
+		 * cameraConflictWarningLabel.setToolTipText(...);
+		 * cameraConflictWarningLabel.setVisible(smoothingConflict);
+		 * boolean smoothingImageVisible = smoothingConflict && cameraConflictImageLabel.getIcon() != null;
+		 * cameraConflictImageFrame.setVisible(smoothingImageVisible);
+		 */
+		boolean smoothingImageVisible = false;
 		boolean pitchConflict = plugin.hasExtendedPitchConflict();
-		cameraConflictWarningLabel.setText(smoothingConflict
-			? "<html><div style='width:180px'>Pitch changes will not work<br>Turn off <b>Rotation Smoothing</b> in <b>Camera Smoothing</b><br>See below image</div></html>"
-			: "");
-		cameraConflictWarningLabel.setToolTipText(smoothingConflict
-			? "Camera Smoothing can change Camera Scenes's camera angle while a viewpoint loads."
-			: null);
-		cameraConflictWarningLabel.setVisible(smoothingConflict);
-		boolean smoothingImageVisible = smoothingConflict && cameraConflictImageLabel.getIcon() != null;
-		cameraConflictImageFrame.setVisible(smoothingImageVisible);
 		cameraPitchWarningLabel.setText(pitchConflict
 			? "<html><div style='width:180px'>Extended pitch may not load correctly<br>Turn on <b>Expand pitch limit</b> in <b>Camera</b><br>See below image</div></html>"
 			: "");

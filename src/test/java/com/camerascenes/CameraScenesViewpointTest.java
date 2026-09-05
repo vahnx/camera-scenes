@@ -14,29 +14,20 @@ public class CameraScenesViewpointTest
 		CameraScenesViewpoint viewpoint = new CameraScenesViewpoint();
 		viewpoint.capture(-1, 9999, -9999);
 
-		assertEquals(CameraScenesViewpoint.CardinalDirection.SOUTH.getYaw(), viewpoint.getYaw());
+		assertEquals(CameraScenesViewpoint.YAW_UNITS - 1, viewpoint.getYaw());
 		assertEquals(CameraScenesViewpoint.MAX_PITCH, viewpoint.getPitch());
 		assertEquals(CameraScenesViewpoint.MIN_ZOOM, viewpoint.getZoom());
 	}
 
 	@Test
-	public void yawSnapsToTheNearestCardinalDirection()
+	public void yawPreservesSpecificCameraDirection()
 	{
 		CameraScenesViewpoint viewpoint = new CameraScenesViewpoint();
 		viewpoint.setYaw(3000);
-		assertEquals(CameraScenesViewpoint.CardinalDirection.WEST, viewpoint.getDirection());
-		assertEquals(4096, viewpoint.getYaw());
+		assertEquals(3000, viewpoint.getYaw());
 
-		viewpoint.setYaw(1792);
-		assertEquals(CameraScenesViewpoint.CardinalDirection.SOUTH, viewpoint.getDirection());
-	}
-
-	@Test
-	public void migratesInterimCompassValues()
-	{
-		assertEquals(4096, CameraScenesViewpoint.migrateInterimCompassYaw(512));
-		assertEquals(8192, CameraScenesViewpoint.migrateInterimCompassYaw(1024));
-		assertEquals(12288, CameraScenesViewpoint.migrateInterimCompassYaw(1536));
+		viewpoint.setYaw(-1);
+		assertEquals(CameraScenesViewpoint.YAW_UNITS - 1, viewpoint.getYaw());
 	}
 
 	@Test

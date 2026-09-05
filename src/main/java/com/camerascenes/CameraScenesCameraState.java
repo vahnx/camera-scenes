@@ -8,6 +8,9 @@ final class CameraScenesCameraState
 	private final int yawTarget;
 	private final int pitchTarget;
 	private final int zoom;
+	private String diagnostics = "";
+	void setDiagnostics(String value) { diagnostics = value; }
+	String getDiagnostics() { return diagnostics; }
 
 	CameraScenesCameraState(int currentYaw, int currentPitch, int yawTarget, int pitchTarget, int zoom)
 	{

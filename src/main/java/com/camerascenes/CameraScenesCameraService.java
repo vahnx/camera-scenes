@@ -18,12 +18,13 @@ final class CameraScenesCameraService
 {
 	private static final int FREE_CAMERA_MODE = 1;
 	private static final int CAMERA_SETTLE_TOLERANCE = 2;
-	private static final long ATTACHED_HANDOFF_GRACE_NANOS = 100_000_000L;
 	private final Client client;
 	private final ClientThread clientThread;
 	private final CameraScenesConfig config;
-	private PendingCameraTransition pendingTransition;
 	private CameraScenesViewpoint queuedViewpoint;
+	@Inject private CameraScenesLoadTrace trace;
+	private String tracePhase = "idle";
+	private double traceProgress;
 
 	@Inject
 	CameraScenesCameraService(Client client, ClientThread clientThread, CameraScenesConfig config)
@@ -63,6 +64,12 @@ final class CameraScenesCameraService
 				client.getCameraYawTarget(),
 				client.getCameraPitchTarget(),
 				currentZoom());
+			state.setDiagnostics("Mode " + client.getCameraMode() + " | " + tracePhase
+				+ " | " + Math.round(traceProgress * 100) + "%"
+				+ "<br>Target Y/P: " + client.getCameraYawTarget() + " / " + client.getCameraPitchTarget()
+				+ "<br>Camera XYZ: " + client.getCameraX() + " / " + client.getCameraY() + " / " + client.getCameraZ()
+				+ "<br>Focus XYZ: " + client.getCameraFocalPointX() + " / " + client.getCameraFocalPointY() + " / " + client.getCameraFocalPointZ()
+				+ "<br>" + trace.status());
 			SwingUtilities.invokeLater(() -> stateConsumer.accept(state));
 		});
 	}
@@ -70,10 +77,14 @@ final class CameraScenesCameraService
 	void apply(CameraScenesViewpoint savedViewpoint)
 	{
 		if (savedViewpoint == null) return;
+		long requestedAt = System.nanoTime();
 		clientThread.invokeLater(() ->
 		{
+			trace.begin(requestedAt, savedViewpoint, config);
+			tracePhase = "requested";
+			traceProgress = 0;
+			traceSample("load_request");
 			if (client.getGameState() != GameState.LOGGED_IN) return;
-			pendingTransition = null;
 			queuedViewpoint = savedViewpoint;
 			if (isCameraReady() && !isCutsceneActive())
 			{
@@ -84,9 +95,25 @@ final class CameraScenesCameraService
 
 	void onBeforeRender()
 	{
+		if (!config.showDebugTextInSidePanel()) trace.finish("debug disabled");
+		traceSample("before_update");
+		try { updateCamera(); }
+		finally
+		{
+			traceSample("after_update");
+			if (queuedViewpoint == null) trace.landed();
+		}
+	}
+
+	private void traceSample(String event)
+	{
+		trace.sample(client, event, tracePhase, traceProgress, isCameraInputActive(), isCutsceneActive());
+	}
+
+	private void updateCamera()
+	{
 		if (client.getGameState() != GameState.LOGGED_IN)
 		{
-			pendingTransition = null;
 			queuedViewpoint = null;
 			return;
 		}
@@ -105,69 +132,11 @@ final class CameraScenesCameraService
 			startQueuedTransition();
 		}
 
-		if (pendingTransition == null)
-		{
-			return;
-		}
-
-		PendingCameraTransition transition = pendingTransition;
-		if (isCameraInputActive())
-		{
-			pendingTransition = null;
-			returnToAttachedCameraNow();
-			return;
-		}
-
-		long nowNanos = System.nanoTime();
-		if (!isCameraReady() || isCutsceneActive())
-		{
-			transition.hold(nowNanos);
-			return;
-		}
-		transition.resume(nowNanos);
-		if (!ensureFreeCameraMode())
-		{
-			pendingTransition = null;
-			return;
-		}
-
-		double rawProgress = Math.min(1.0,
-			transition.getElapsedNanos(nowNanos) / (transition.getDurationMilliseconds() * 1_000_000.0));
-		double progress = CameraScenesCameraInterpolation.easeInOut(rawProgress);
-		int yaw = CameraScenesCameraInterpolation.yaw(transition.getStartYaw(), transition.getTargetYaw(), progress);
-		int pitch = CameraScenesCameraInterpolation.linear(transition.getStartPitch(), transition.getTargetPitch(), progress);
-		client.setCameraYawTarget(yaw);
-		client.setCameraPitchTarget(pitch);
-		if (transition.isSmoothZoom())
-		{
-			int zoom = CameraScenesCameraInterpolation.linear(transition.getStartZoom(), transition.getTargetZoom(),
-				CameraScenesCameraInterpolation.zoomEaseInOut(rawProgress));
-			if (transition.shouldSendZoom(zoom))
-			{
-				client.runScript(ScriptID.CAMERA_DO_ZOOM, zoom, zoom);
-			}
-		}
-
-		if (rawProgress >= 1.0)
-		{
-			client.setCameraYawTarget(transition.getTargetYaw());
-			client.setCameraPitchTarget(transition.getTargetPitch());
-			if (transition.isSmoothZoom() && transition.shouldSendZoom(transition.getTargetZoom()))
-			{
-				client.runScript(ScriptID.CAMERA_DO_ZOOM, transition.getTargetZoom(), transition.getTargetZoom());
-			}
-			if (hasCameraSettled(client.getCameraYaw(), client.getCameraPitch(), transition.getTargetYaw(), transition.getTargetPitch())
-				|| transition.hasExceededSettleGrace(nowNanos))
-			{
-				returnToAttachedCameraNow();
-				pendingTransition = null;
-			}
-		}
 	}
 
 	void cancelPendingLoad()
 	{
-		pendingTransition = null;
+		trace.finish("cancelled or shutdown");
 		queuedViewpoint = null;
 	}
 
@@ -186,31 +155,11 @@ final class CameraScenesCameraService
 	{
 		CameraScenesViewpoint viewpoint = queuedViewpoint;
 		queuedViewpoint = null;
-		if (viewpoint == null || !isCameraReady() || isCutsceneActive() || !ensureFreeCameraMode())
+		if (viewpoint == null || !isCameraReady() || isCutsceneActive())
 		{
 			return;
 		}
-		if (!config.smoothViewpointLoads())
-		{
-			applyImmediate(viewpoint);
-			return;
-		}
-
-		boolean smoothZoom = config.smoothZoomLoads();
-		if (!smoothZoom)
-		{
-			client.runScript(ScriptID.CAMERA_DO_ZOOM, viewpoint.getZoom(), viewpoint.getZoom());
-		}
-		pendingTransition = new PendingCameraTransition(
-			client.getCameraYawTarget(),
-			client.getCameraPitchTarget(),
-			currentZoom(),
-			viewpoint.getYaw(),
-			viewpoint.getPitch(),
-			viewpoint.getZoom(),
-			System.nanoTime(),
-			Math.max(100, Math.min(2000, config.viewpointLoadDuration())),
-			smoothZoom);
+		applyImmediate(viewpoint);
 	}
 
 	private boolean isCameraReady()
@@ -243,6 +192,7 @@ final class CameraScenesCameraService
 
 	private void applyImmediate(CameraScenesViewpoint savedViewpoint)
 	{
+		tracePhase = "immediate";
 		if (!ensureFreeCameraMode())
 		{
 			return;
@@ -258,6 +208,7 @@ final class CameraScenesCameraService
 		if (client.getCameraMode() != FREE_CAMERA_MODE)
 		{
 			client.setCameraMode(FREE_CAMERA_MODE);
+			traceSample("entered_free_mode");
 		}
 		return client.getCameraMode() == FREE_CAMERA_MODE;
 	}
@@ -266,7 +217,11 @@ final class CameraScenesCameraService
 	{
 		if (client.getGameState() == GameState.LOGGED_IN && client.getCameraMode() == FREE_CAMERA_MODE)
 		{
+			traceSample("before_reattach");
 			client.setCameraMode(0);
+			tracePhase = "post-load";
+			traceSample("after_reattach");
+			trace.landed();
 		}
 	}
 
@@ -283,85 +238,4 @@ final class CameraScenesCameraService
 		return client.getVarcIntValue(VarClientID.CAMERA_ZOOM_BIG);
 	}
 
-	private static final class PendingCameraTransition
-	{
-		private final int startYaw;
-		private final int startPitch;
-		private final int startZoom;
-		private final int targetYaw;
-		private final int targetPitch;
-		private final int targetZoom;
-		private final long createdAtNanos;
-		private final int durationMilliseconds;
-		private final boolean smoothZoom;
-		private long heldAtNanos = -1L;
-		private long heldDurationNanos;
-		private long settleStartedAtNanos = -1L;
-		private int lastZoomCommand = Integer.MIN_VALUE;
-
-		private PendingCameraTransition(int startYaw, int startPitch, int startZoom, int targetYaw, int targetPitch,
-			int targetZoom, long createdAtNanos, int durationMilliseconds, boolean smoothZoom)
-		{
-			this.startYaw = startYaw;
-			this.startPitch = startPitch;
-			this.startZoom = startZoom;
-			this.targetYaw = targetYaw;
-			this.targetPitch = targetPitch;
-			this.targetZoom = targetZoom;
-			this.createdAtNanos = createdAtNanos;
-			this.durationMilliseconds = durationMilliseconds;
-			this.smoothZoom = smoothZoom;
-		}
-
-		private int getStartYaw() { return startYaw; }
-		private int getStartPitch() { return startPitch; }
-		private int getStartZoom() { return startZoom; }
-		private int getTargetYaw() { return targetYaw; }
-		private int getTargetPitch() { return targetPitch; }
-		private int getTargetZoom() { return targetZoom; }
-		private int getDurationMilliseconds() { return durationMilliseconds; }
-		private boolean isSmoothZoom() { return smoothZoom; }
-
-		private boolean shouldSendZoom(int zoom)
-		{
-			if (zoom == lastZoomCommand)
-			{
-				return false;
-			}
-			lastZoomCommand = zoom;
-			return true;
-		}
-
-		private boolean hasExceededSettleGrace(long nowNanos)
-		{
-			if (settleStartedAtNanos < 0L)
-			{
-				settleStartedAtNanos = nowNanos;
-			}
-			return nowNanos - settleStartedAtNanos >= ATTACHED_HANDOFF_GRACE_NANOS;
-		}
-
-		private void hold(long nowNanos)
-		{
-			if (heldAtNanos < 0)
-			{
-				heldAtNanos = nowNanos;
-			}
-		}
-
-		private void resume(long nowNanos)
-		{
-			if (heldAtNanos >= 0)
-			{
-				heldDurationNanos += nowNanos - heldAtNanos;
-				heldAtNanos = -1L;
-			}
-		}
-
-		private long getElapsedNanos(long nowNanos)
-		{
-			long currentHoldNanos = heldAtNanos < 0 ? 0 : nowNanos - heldAtNanos;
-			return Math.max(0, nowNanos - createdAtNanos - heldDurationNanos - currentHoldNanos);
-		}
-	}
 }

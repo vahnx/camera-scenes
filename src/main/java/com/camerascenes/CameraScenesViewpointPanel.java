@@ -13,7 +13,6 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -121,27 +120,14 @@ final class CameraScenesViewpointPanel extends JPanel
 		JPanel cameraValues = new JPanel(new GridLayout(1, 3, 4, 0));
 		cameraValues.setOpaque(false);
 		cameraValues.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 4));
-		JComboBox<CameraScenesViewpoint.CardinalDirection> directionSelector =
-			new JComboBox<>(CameraScenesViewpoint.CardinalDirection.values());
-		directionSelector.setSelectedItem(viewpoint.getDirection());
-		directionSelector.setToolTipText("North, East, South, West; yaw is saved as the nearest compass direction");
+		JSpinner yawSpinner = spinner(viewpoint.getYaw(), 0, CameraScenesViewpoint.YAW_UNITS - 1);
 		JSpinner pitchSpinner = spinner(viewpoint.getPitch(), CameraScenesViewpoint.MIN_PITCH, CameraScenesViewpoint.MAX_PITCH);
 		JSpinner zoomSpinner = spinner(viewpoint.getZoom(), CameraScenesViewpoint.MIN_ZOOM, CameraScenesViewpoint.MAX_ZOOM);
-		cameraValues.add(value("Direction", directionSelector));
+		cameraValues.add(value("Yaw", yawSpinner));
 		cameraValues.add(value("Pitch", pitchSpinner));
 		cameraValues.add(value("Zoom", zoomSpinner));
 		add(cameraValues, BorderLayout.CENTER);
-		directionSelector.addActionListener(actionEvent -> {
-			CameraScenesViewpoint.CardinalDirection direction =
-				(CameraScenesViewpoint.CardinalDirection) directionSelector.getSelectedItem();
-			if (direction != null && viewpoint.getYaw() != direction.getYaw())
-			{
-				plugin.getViewpointHistory().recordBeforeMutation(viewpoint);
-				viewpoint.setYaw(direction.getYaw());
-				plugin.saveConfig();
-				refreshHistoryButtons();
-			}
-		});
+		bindSpinner(yawSpinner, viewpoint::setYaw);
 		bindSpinner(pitchSpinner, viewpoint::setPitch);
 		bindSpinner(zoomSpinner, viewpoint::setZoom);
 

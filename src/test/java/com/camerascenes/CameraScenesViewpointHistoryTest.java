@@ -33,7 +33,7 @@ public class CameraScenesViewpointHistoryTest
 		assertTrue(history.undo(viewpoint));
 		assertEquals("Changed", viewpoint.getName());
 		assertEquals("Changed notes", viewpoint.getNotes());
-		assertEquals(CameraScenesViewpoint.CardinalDirection.SOUTH.getYaw(), viewpoint.getYaw());
+		assertEquals(100, viewpoint.getYaw());
 		assertEquals(200, viewpoint.getPitch());
 		assertEquals(500, viewpoint.getZoom());
 		assertEquals(changedKeybind, viewpoint.getKeybind());
@@ -43,7 +43,7 @@ public class CameraScenesViewpointHistoryTest
 		assertTrue(history.redo(viewpoint));
 		assertEquals("Changed", viewpoint.getName());
 		assertEquals("Changed notes", viewpoint.getNotes());
-		assertEquals(CameraScenesViewpoint.CardinalDirection.WEST.getYaw(), viewpoint.getYaw());
+		assertEquals(3000, viewpoint.getYaw());
 		assertEquals(400, viewpoint.getPitch());
 		assertEquals(600, viewpoint.getZoom());
 		assertEquals(changedKeybind, viewpoint.getKeybind());

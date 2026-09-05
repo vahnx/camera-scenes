@@ -7,60 +7,6 @@ public class CameraScenesViewpoint
 {
 	/** RuneLite camera yaw uses 14-bit Jagex Angle Units per revolution. */
 	public static final int YAW_UNITS = 1 << 14;
-	private static final int COMPASS_QUADRANT_WIDTH = YAW_UNITS / 8;
-
-	public enum CardinalDirection
-	{
-		NORTH(YAW_UNITS / 2, "N", "North"),
-		EAST((YAW_UNITS * 3) / 4, "E", "East"),
-		SOUTH(0, "S", "South"),
-		WEST(YAW_UNITS / 4, "W", "West");
-
-		private final int yaw;
-		private final String abbreviation;
-		private final String fullName;
-
-		CardinalDirection(int yaw, String abbreviation, String fullName)
-		{
-			this.yaw = yaw;
-			this.abbreviation = abbreviation;
-			this.fullName = fullName;
-		}
-
-		public int getYaw()
-		{
-			return yaw;
-		}
-
-		@Override
-		public String toString()
-		{
-			return abbreviation;
-		}
-
-		public String getFullName()
-		{
-			return fullName;
-		}
-
-		static CardinalDirection fromYaw(int yaw)
-		{
-			int normalized = normalizeYaw(yaw);
-			if (normalized < COMPASS_QUADRANT_WIDTH || normalized >= YAW_UNITS - COMPASS_QUADRANT_WIDTH)
-			{
-				return SOUTH;
-			}
-			if (normalized < YAW_UNITS / 2 - COMPASS_QUADRANT_WIDTH)
-			{
-				return WEST;
-			}
-			if (normalized < YAW_UNITS / 2 + COMPASS_QUADRANT_WIDTH)
-			{
-				return NORTH;
-			}
-			return EAST;
-		}
-	}
 	public static final int MIN_PITCH = 0;
 	public static final int MAX_PITCH = 4160;
 	public static final int DEFAULT_MIN_PITCH = 128;
@@ -95,7 +41,7 @@ public class CameraScenesViewpoint
 
 	public void capture(int yaw, int pitch, int zoom)
 	{
-		this.yaw = snapToCompassYaw(yaw);
+		this.yaw = normalizeYaw(yaw);
 		this.pitch = clamp(pitch, MIN_PITCH, MAX_PITCH);
 		this.zoom = clamp(zoom, MIN_ZOOM, MAX_ZOOM);
 	}
@@ -107,8 +53,7 @@ public class CameraScenesViewpoint
 	public String getNotes() { return notes == null ? "" : notes; }
 	public void setNotes(String notes) { this.notes = notes == null ? "" : notes; }
 	public int getYaw() { return yaw; }
-	public void setYaw(int yaw) { this.yaw = snapToCompassYaw(yaw); }
-	public CardinalDirection getDirection() { return CardinalDirection.fromYaw(yaw); }
+	public void setYaw(int yaw) { this.yaw = normalizeYaw(yaw); }
 	public int getPitch() { return pitch; }
 	public void setPitch(int pitch) { this.pitch = clamp(pitch, MIN_PITCH, MAX_PITCH); }
 	public int getZoom() { return zoom; }
@@ -133,26 +78,6 @@ public class CameraScenesViewpoint
 	public static int normalizeYaw(int yaw)
 	{
 		return Math.floorMod(yaw, YAW_UNITS);
-	}
-
-	public static int snapToCompassYaw(int yaw)
-	{
-		return CardinalDirection.fromYaw(yaw).getYaw();
-	}
-
-	static int migrateInterimCompassYaw(int yaw)
-	{
-		switch (yaw)
-		{
-			case 512:
-				return CardinalDirection.WEST.getYaw();
-			case 1024:
-				return CardinalDirection.NORTH.getYaw();
-			case 1536:
-				return CardinalDirection.EAST.getYaw();
-			default:
-				return yaw;
-		}
 	}
 
 	static boolean usesExtendedPitch(int pitch)

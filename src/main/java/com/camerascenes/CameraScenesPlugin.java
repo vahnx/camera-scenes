@@ -353,12 +353,13 @@ public class CameraScenesPlugin extends Plugin
 	@Subscribe
 	public void onConfigChanged(ConfigChanged event)
 	{
-		if (CameraScenesConfig.GROUP.equals(event.getGroup())
-			&& SHOW_DEBUG_TEXT_KEY.equals(event.getKey())
-			&& panel != null)
-		{
-			panel.refreshDebugTextVisibility();
-		}
+		// Debug sidepanel text is retained in code but intentionally disabled.
+		// if (CameraScenesConfig.GROUP.equals(event.getGroup())
+		// 	&& SHOW_DEBUG_TEXT_KEY.equals(event.getKey())
+		// 	&& panel != null)
+		// {
+		// 	panel.refreshDebugTextVisibility();
+		// }
 		if (CAMERA_SMOOTHING_CONFIG_GROUP.equals(event.getGroup())
 			&& CAMERA_SMOOTHING_ROTATION_KEY.equals(event.getKey())
 			&& panel != null)
