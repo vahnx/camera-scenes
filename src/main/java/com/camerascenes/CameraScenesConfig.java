@@ -9,7 +9,7 @@ import net.runelite.client.config.Units;
 @ConfigGroup(CameraScenesConfig.GROUP)
 public interface CameraScenesConfig extends Config
 {
-	String GROUP = "eye-spy";
+	String GROUP = "camera-scenes";
 
 	// The former disableWhileTyping option was retired. Existing saved values are
 	// intentionally ignored so removing the UI item does not affect other config keys.

@@ -41,7 +41,7 @@ final class CameraScenesLoadTrace
 		samples = 0;
 		rows = new StringBuilder("# requested_at=" + java.time.Instant.now()
 			+ ",saved_yaw=" + view.getYaw() + ",saved_pitch=" + view.getPitch()
-			+ ",saved_zoom=" + view.getZoom() + ",load_mode=immediate"
+			+ ",saved_zoom=" + view.getZoom() + ",load_mode=temporary-detached"
 			+ "\nms,event,phase,progress,state,mode,yaw,pitch,target_yaw,target_pitch,zoom_small,zoom_big,camera_x,camera_y,camera_z,focal_x,focal_y,focal_z,input,cutscene\n");
 		status = "Recording load";
 	}

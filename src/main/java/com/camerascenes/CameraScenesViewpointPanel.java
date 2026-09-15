@@ -166,7 +166,10 @@ final class CameraScenesViewpointPanel extends JPanel
 		hotkeyRow.setAlignmentX(LEFT_ALIGNMENT);
 		hotkeyRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
 		hotkeyRow.add(hotkey);
-		hotkeyRow.add(CameraScenesPanel.button("Load View", ColorScheme.BRAND_ORANGE, () -> plugin.loadViewpoint(viewpoint)));
+		JButton loadButton = CameraScenesPanel.button("Load View", ColorScheme.BRAND_ORANGE,
+			() -> plugin.loadViewpoint(viewpoint));
+		loadButton.setToolTipText("Loads the saved yaw, pitch, and zoom using detached camera mode briefly.");
+		hotkeyRow.add(loadButton);
 		actionArea.add(hotkeyRow);
 		actionArea.add(Box.createVerticalStrut(4));
 		JPanel viewpointActions = new JPanel(new GridLayout(1, 2, 4, 0));

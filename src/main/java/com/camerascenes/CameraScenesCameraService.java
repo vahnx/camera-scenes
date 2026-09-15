@@ -16,7 +16,8 @@ import net.runelite.client.callback.ClientThread;
 @Singleton
 final class CameraScenesCameraService
 {
-	private static final int FREE_CAMERA_MODE = 1;
+	static final int ATTACHED_CAMERA_MODE = 0;
+	static final int DETACHED_CAMERA_MODE = 1;
 	private static final int CAMERA_SETTLE_TOLERANCE = 2;
 	private final Client client;
 	private final ClientThread clientThread;
@@ -144,9 +145,9 @@ final class CameraScenesCameraService
 	{
 		clientThread.invokeLater(() -> {
 			cancelPendingLoad();
-			if (client.getGameState() == GameState.LOGGED_IN && client.getCameraMode() == FREE_CAMERA_MODE)
+			if (client.getGameState() == GameState.LOGGED_IN && client.getCameraMode() == DETACHED_CAMERA_MODE)
 			{
-				client.setCameraMode(0);
+				client.setCameraMode(ATTACHED_CAMERA_MODE);
 			}
 		});
 	}
@@ -192,37 +193,35 @@ final class CameraScenesCameraService
 
 	private void applyImmediate(CameraScenesViewpoint savedViewpoint)
 	{
-		tracePhase = "immediate";
-		if (!ensureFreeCameraMode())
+		int originalCameraMode = client.getCameraMode();
+		boolean restoreAttachedCamera = originalCameraMode == ATTACHED_CAMERA_MODE;
+		if (restoreAttachedCamera)
 		{
+			client.setCameraMode(DETACHED_CAMERA_MODE);
+			traceSample("entered_detached_mode");
+		}
+
+		if (client.getCameraMode() != DETACHED_CAMERA_MODE)
+		{
+			tracePhase = "detached-mode-unavailable";
+			trace.finish("detached camera unavailable");
 			return;
 		}
-		client.setCameraYawTarget(savedViewpoint.getYaw());
+
+		tracePhase = "detached-orientation-and-zoom-load";
+		client.setCameraYawTarget(CameraScenesViewpoint.normalizeYaw(savedViewpoint.getYaw()));
 		client.setCameraPitchTarget(savedViewpoint.getPitch());
 		client.runScript(ScriptID.CAMERA_DO_ZOOM, savedViewpoint.getZoom(), savedViewpoint.getZoom());
-		returnToAttachedCameraNow();
-	}
 
-	private boolean ensureFreeCameraMode()
-	{
-		if (client.getCameraMode() != FREE_CAMERA_MODE)
-		{
-			client.setCameraMode(FREE_CAMERA_MODE);
-			traceSample("entered_free_mode");
-		}
-		return client.getCameraMode() == FREE_CAMERA_MODE;
-	}
-
-	private void returnToAttachedCameraNow()
-	{
-		if (client.getGameState() == GameState.LOGGED_IN && client.getCameraMode() == FREE_CAMERA_MODE)
+		if (restoreAttachedCamera && client.getGameState() == GameState.LOGGED_IN
+			&& client.getCameraMode() == DETACHED_CAMERA_MODE)
 		{
 			traceSample("before_reattach");
-			client.setCameraMode(0);
+			client.setCameraMode(ATTACHED_CAMERA_MODE);
 			tracePhase = "post-load";
 			traceSample("after_reattach");
-			trace.landed();
 		}
+		trace.landed();
 	}
 
 	static boolean hasCameraSettled(int currentYaw, int currentPitch, int targetYaw, int targetPitch)

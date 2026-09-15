@@ -8,6 +8,7 @@ Save and load camera viewpoints so you can quickly return to useful angles.
 - Organize viewpoints into groups
 - Ability to name, enable, import, export and reorder groups/viewpoints
 - Load or cycle through viewpoints with the sidepanel or programmable hotkeys
+- Restore saved yaw, pitch, and zoom by briefly using detached camera mode
 
 ## Screenshots
 
@@ -15,7 +16,7 @@ Save and load camera viewpoints so you can quickly return to useful angles.
 
 ## Known Issues
 - Some plugins that continuously control the camera can override this plugin causing instability.
-- Enable **Expand pitch limit** in the **Camera** plugin before using extended values.
+- Enable **Expand pitch limit** in the **Camera** plugin before using extended pitches in detached camera mode.
 
 ![Camera Scenes expand pitch setting](images/camera-scenes-settings.png)
 

@@ -58,6 +58,7 @@ public class CameraScenesPlugin extends Plugin
 	@Override
 	protected void startUp()
 	{
+		migrateLegacyConfiguration();
 		loadConfig();
 		pendingSaveTimer = new Timer(SAVE_DEBOUNCE_MILLISECONDS, actionEvent -> saveConfigNow());
 		pendingSaveTimer.setRepeats(false);
@@ -310,6 +311,24 @@ public class CameraScenesPlugin extends Plugin
 		configManager.setConfiguration(CameraScenesConfig.GROUP, "viewpointLoadDuration", settings.getViewpointLoadDuration());
 		configManager.setConfiguration(CameraScenesConfig.GROUP, "smoothZoomLoads", settings.isSmoothZoomLoads());
 		configManager.setConfiguration(CameraScenesConfig.GROUP, "showDebugTextInSidePanel", settings.isShowDebugTextInSidePanel());
+	}
+
+	private void migrateLegacyConfiguration()
+	{
+		CameraScenesConfigMigration.migrate(new CameraScenesConfigMigration.Configuration()
+		{
+			@Override
+			public String get(String group, String key)
+			{
+				return configManager.getConfiguration(group, key);
+			}
+
+			@Override
+			public void set(String group, String key, String value)
+			{
+				configManager.setConfiguration(group, key, value);
+			}
+		});
 	}
 
 	private static boolean confirmImportedBindingConflicts(java.awt.Component parent, List<String> conflicts)
