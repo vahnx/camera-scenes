@@ -26,6 +26,7 @@ If you find this plugin useful and would like to support its continued developme
 
 - [Sponsor me on GitHub](https://github.com/sponsors/vahnx)
 - [Support me through PayPal](https://paypal.me/twitchplaying)
+- Bitcoin: `bc1qnl9nvwldzzdnlglqhvlhdm5l04rxawgkezr2ru`
 
 Join the [vahnx Projects Discord](https://discord.gg/bn4HcQWTp) for general support, suggestions, and project discussion.
 
